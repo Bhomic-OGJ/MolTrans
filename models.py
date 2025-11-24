@@ -34,7 +34,7 @@ class BIN_Interaction_Flat(nn.Sequential):
         self.batch_size = config['batch_size']
         self.input_dim_drug = config['input_dim_drug']
         self.input_dim_target = config['input_dim_target']
-        self.gpus = torch.cuda.device_count()
+        self.gpus = max(1, torch.cuda.device_count())
         self.n_layer = 2
         #encoder
         self.hidden_size = config['emb_size']
@@ -93,7 +93,7 @@ class BIN_Interaction_Flat(nn.Sequential):
         p_aug = torch.unsqueeze(p_encoded_layers, 1).repeat(1, self.max_d, 1, 1) # repeat along drug size
         
         i = d_aug * p_aug # interaction
-        i_v = i.view(int(self.batch_size/self.gpus), -1, self.max_d, self.max_p) 
+        i_v = i.view(int(self.batch_size // self.gpus), -1, self.max_d, self.max_p) 
         # batch_size x embed size x max_drug_seq_len x max_protein_seq_len
         i_v = torch.sum(i_v, dim = 1)
         #print(i_v.shape)
@@ -110,7 +110,7 @@ class BIN_Interaction_Flat(nn.Sequential):
         #f = self.dense_net(f)
         #print(f.shape)
         
-        f = f.view(int(self.batch_size/self.gpus), -1)
+        f = f.view(int(self.batch_size // self.gpus), -1)
         #print(f.shape)
         
         #f_encode = torch.cat((d_encoded_layers[:,-1], p_encoded_layers[:,-1]), dim = 1)

@@ -53,13 +53,13 @@ def test(data_generator, model):
     loss_accumulate = 0.0
     count = 0.0
     for i, (d, p, d_mask, p_mask, label) in enumerate(data_generator):
-        score = model(d.long().cuda(), p.long().cuda(), d_mask.long().cuda(), p_mask.long().cuda())
+        score = model(d.long().to(device), p.long().to(device), d_mask.long().to(device), p_mask.long().to(device))
 
         m = torch.nn.Sigmoid()
         logits = torch.squeeze(m(score))
         loss_fct = torch.nn.BCELoss()
 
-        label = Variable(torch.from_numpy(np.array(label)).float()).cuda()
+        label = Variable(torch.from_numpy(np.array(label)).float()).to(device)
 
         loss = loss_fct(logits, label)
 
@@ -120,10 +120,9 @@ def main():
     loss_history = []
 
     model = BIN_Interaction_Flat(**config)
+    model = model.to(device)
 
-    model = model.cuda()
-
-    if torch.cuda.device_count() > 1:
+    if use_cuda and torch.cuda.device_count() > 1:
         print("Let's use", torch.cuda.device_count(), "GPUs!")
         model = nn.DataParallel(model, dim=0)
 
@@ -163,9 +162,9 @@ def main():
     for epo in range(args.epochs):
         model.train()
         for i, (d, p, d_mask, p_mask, label) in enumerate(training_generator):
-            score = model(d.long().cuda(), p.long().cuda(), d_mask.long().cuda(), p_mask.long().cuda())
+            score = model(d.long().to(device), p.long().to(device), d_mask.long().to(device), p_mask.long().to(device))
 
-            label = Variable(torch.from_numpy(np.array(label)).float()).cuda()
+            label = Variable(torch.from_numpy(np.array(label)).float()).to(device)
 
             loss_fct = torch.nn.BCELoss()
             m = torch.nn.Sigmoid()
